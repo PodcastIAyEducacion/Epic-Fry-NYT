@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Operación Epic Fury</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Special+Elite&family=Source+Serif+4:ital,wght@0,300;0,400;1,300&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --black: #0a0a0a;
+      --dark: #111111;
+      --grey: #1c1c1c;
+      --mid: #2e2e2e;
+      --light: #a0a0a0;
+      --white: #e8e8e8;
+      --red: #8b1a1a;
+      --red-light: #c0392b;
+    }
+
+    html, body {
+      height: 100%;
+      background-color: var(--black);
+      color: var(--white);
+      font-family: 'Source Serif 4', serif;
+      overflow: hidden;
+    }
+
+    /* HEADER */
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 56px;
+      background: var(--black);
+      border-bottom: 1px solid var(--mid);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      z-index: 100;
+    }
+
+    .header-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 0.12em;
+      color: var(--white);
+    }
+
+    .header-title span {
+      color: var(--red-light);
+    }
+
+    .header-subtitle {
+      font-family: 'Special Elite', monospace;
+      font-size: 0.62rem;
+      color: var(--light);
+      letter-spacing: 0.08em;
+      text-align: right;
+      line-height: 1.4;
+    }
+
+    /* MAIN VIEWER */
+    main {
+      position: fixed;
+      top: 56px;
+      bottom: 64px;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--black);
+    }
+
+    .book-container {
+      position: relative;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .page-wrapper {
+      position: relative;
+      height: calc(100% - 32px);
+      max-height: 900px;
+      aspect-ratio: 2 / 3;
+      background: var(--dark);
+      box-shadow:
+        0 0 0 1px var(--mid),
+        0 8px 40px rgba(0,0,0,0.8),
+        0 24px 80px rgba(0,0,0,0.5);
+    }
+
+    .page-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    /* PAGE TURN ANIMATION */
+    .page-wrapper {
+      animation: pagein 0.35s ease both;
+    }
+
+    @keyframes pagein {
+      from { opacity: 0; transform: translateX(18px) scale(0.98); }
+      to   { opacity: 1; transform: translateX(0) scale(1); }
+    }
+
+    /* SIDE NAV ARROWS */
+    .nav-arrow {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 48px;
+      height: 80px;
+      background: rgba(10,10,10,0.7);
+      border: 1px solid var(--mid);
+      color: var(--light);
+      font-size: 1.4rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+      z-index: 90;
+    }
+
+    .nav-arrow:hover {
+      background: var(--red);
+      color: var(--white);
+      border-color: var(--red);
+    }
+
+    .nav-arrow:disabled {
+      opacity: 0.2;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .nav-prev { left: 12px; }
+    .nav-next { right: 12px; }
+
+    /* FOOTER */
+    footer {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 64px;
+      background: var(--black);
+      border-top: 1px solid var(--mid);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      z-index: 100;
+      padding: 0 80px;
+    }
+
+    /* THUMBNAIL STRIP */
+    .thumb-strip {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      max-width: 100%;
+      padding: 4px 0;
+    }
+
+    .thumb-strip::-webkit-scrollbar { display: none; }
+
+    .thumb {
+      flex-shrink: 0;
+      width: 28px;
+      height: 42px;
+      background: var(--grey);
+      border: 1px solid var(--mid);
+      cursor: pointer;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.15s;
+      position: relative;
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+
+    .thumb:hover img { opacity: 1; }
+    .thumb:hover { transform: translateY(-3px); border-color: var(--light); }
+
+    .thumb.active {
+      border-color: var(--red-light);
+      transform: translateY(-3px);
+    }
+
+    .thumb.active img { opacity: 1; }
+
+    /* PAGE COUNTER */
+    .page-counter {
+      font-family: 'Special Elite', monospace;
+      font-size: 0.72rem;
+      color: var(--light);
+      letter-spacing: 0.1em;
+      white-space: nowrap;
+      min-width: 90px;
+      text-align: center;
+    }
+
+    /* KEYBOARD HINT */
+    .key-hint {
+      position: fixed;
+      bottom: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Special Elite', monospace;
+      font-size: 0.58rem;
+      color: var(--mid);
+      letter-spacing: 0.12em;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    /* LOADING STATE */
+    .loading-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--black);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      gap: 24px;
+      transition: opacity 0.6s;
+    }
+
+    .loading-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3rem;
+      letter-spacing: 0.2em;
+      color: var(--white);
+    }
+
+    .loading-title span { color: var(--red-light); }
+
+    .loading-sub {
+      font-family: 'Special Elite', monospace;
+      font-size: 0.75rem;
+      color: var(--light);
+      letter-spacing: 0.15em;
+      text-align: center;
+      line-height: 2;
+    }
+
+    .loading-bar-outer {
+      width: 240px;
+      height: 2px;
+      background: var(--mid);
+    }
+
+    .loading-bar-inner {
+      height: 100%;
+      background: var(--red-light);
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    /* TOUCH SWIPE AREA */
+    .swipe-zone {
+      position: fixed;
+      top: 56px;
+      bottom: 64px;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-title">OPERACIÓN <span>EPIC FURY</span></div>
+  <div class="loading-sub">
+    Basado en el reportaje de Jonathan Swan y Maggie Haberman<br>
+    The New York Times — 7 de abril de 2026
+  </div>
+  <div class="loading-bar-outer">
+    <div class="loading-bar-inner" id="loadingBar"></div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-title">OPERACIÓN <span>EPIC FURY</span></div>
+  <div class="header-subtitle">
+    Jonathan Swan · Maggie Haberman<br>
+    The New York Times · 7 abril 2026
+  </div>
+</header>
+
+<!-- NAV ARROWS -->
+<button class="nav-arrow nav-prev" id="btnPrev" onclick="changePage(-1)">&#8592;</button>
+<button class="nav-arrow nav-next" id="btnNext" onclick="changePage(1)">&#8594;</button>
+
+<!-- MAIN -->
+<main>
+  <div class="book-container">
+    <div class="page-wrapper" id="pageWrapper">
+      <img id="pageImg" src="" alt="Página del cómic" draggable="false" />
+    </div>
+  </div>
+</main>
+
+<!-- KEY HINT -->
+<div class="key-hint">&#8592; &#8594; &nbsp;|&nbsp; FLECHAS DEL TECLADO PARA NAVEGAR</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="thumb-strip" id="thumbStrip"></div>
+  <div class="page-counter" id="pageCounter">— / —</div>
+</footer>
+
+<script>
+  // ─── PÁGINAS ───────────────────────────────────────────────────────────────
+  // Coloca todas las imágenes en la misma carpeta que este index.html
+  // con los nombres exactos indicados abajo.
+
+  const PAGES = [
+    { file: '00_portada.jpeg',         label: 'Portada' },
+    { file: '01_pagina_01.jpeg',       label: 'Pág. 1 — La llegada' },
+    { file: '02_pagina_02.jpeg',       label: 'Pág. 2 — La presentación' },
+    { file: '03_pagina_03.jpeg',       label: 'Pág. 3 — El halcón' },
+    { file: '04_pagina_04.jpeg',       label: 'Pág. 4 — Farcical' },
+    { file: '05_pagina_05.jpeg',       label: 'Pág. 5 — ¿Y luego qué?' },
+    { file: '06_pagina_06.jpeg',       label: 'Pág. 6 — Vance el escéptico' },
+    { file: '07_pagina_07.jpeg',       label: 'Pág. 7 — Ginebra' },
+    { file: '08_pagina_08.jpeg',       label: 'Pág. 8 — La reunión final' },
+    { file: '09_pagina_09.jpeg',       label: 'Pág. 9 — No aborts' },
+    { file: '10_pagina_10.jpeg',       label: 'Pág. 10 — Las consecuencias' },
+    { file: '11_contraportada.jpeg',   label: 'Contraportada' },
+    { file: '12_diligencia_final.jpeg',label: 'Diligencia final' },
+  ];
+
+  let current = 0;
+
+  // ─── ELEMENTOS ─────────────────────────────────────────────────────────────
+  const pageImg     = document.getElementById('pageImg');
+  const pageWrapper = document.getElementById('pageWrapper');
+  const pageCounter = document.getElementById('pageCounter');
+  const thumbStrip  = document.getElementById('thumbStrip');
+  const btnPrev     = document.getElementById('btnPrev');
+  const btnNext     = document.getElementById('btnNext');
+  const loadingBar  = document.getElementById('loadingBar');
+  const loadingScreen = document.getElementById('loadingScreen');
+
+  // ─── THUMBNAILS ────────────────────────────────────────────────────────────
+  PAGES.forEach((p, i) => {
+    const div = document.createElement('div');
+    div.className = 'thumb' + (i === 0 ? ' active' : '');
+    div.title = p.label;
+    div.onclick = () => goTo(i);
+
+    const img = document.createElement('img');
+    img.src = p.file;
+    img.alt = p.label;
+    img.loading = 'lazy';
+
+    div.appendChild(img);
+    thumbStrip.appendChild(div);
+  });
+
+  // ─── PRELOAD FIRST + LOADING BAR ───────────────────────────────────────────
+  let loaded = 0;
+  const total = PAGES.length;
+
+  PAGES.forEach((p, i) => {
+    const img = new Image();
+    img.onload = img.onerror = () => {
+      loaded++;
+      loadingBar.style.width = (loaded / total * 100) + '%';
+      if (loaded === total) {
+        setTimeout(() => {
+          loadingScreen.classList.add('hidden');
+        }, 400);
+      }
+    };
+    img.src = p.file;
+  });
+
+  // ─── NAVIGATION ────────────────────────────────────────────────────────────
+  function goTo(index) {
+    if (index < 0 || index >= PAGES.length) return;
+
+    // Remove active thumb
+    thumbStrip.children[current].classList.remove('active');
+
+    current = index;
+
+    // Restart animation
+    pageWrapper.style.animation = 'none';
+    pageWrapper.offsetHeight; // reflow
+    pageWrapper.style.animation = '';
+
+    pageImg.src = PAGES[current].file;
+    pageImg.alt = PAGES[current].label;
+
+    // Update thumb
+    const activThumb = thumbStrip.children[current];
+    activThumb.classList.add('active');
+    activThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+
+    // Counter
+    pageCounter.textContent = (current + 1) + ' / ' + PAGES.length;
+
+    // Buttons
+    btnPrev.disabled = current === 0;
+    btnNext.disabled = current === PAGES.length - 1;
+  }
+
+  function changePage(dir) {
+    goTo(current + dir);
+  }
+
+  // ─── KEYBOARD ──────────────────────────────────────────────────────────────
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown')  changePage(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')    changePage(-1);
+    if (e.key === 'Home') goTo(0);
+    if (e.key === 'End')  goTo(PAGES.length - 1);
+  });
+
+  // ─── SWIPE (MÓVIL) ─────────────────────────────────────────────────────────
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) changePage(dx < 0 ? 1 : -1);
+  }, { passive: true });
+
+  // ─── INIT ──────────────────────────────────────────────────────────────────
+  goTo(0);
+</script>
+</body>
+</html>
